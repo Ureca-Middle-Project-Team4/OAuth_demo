@@ -1,19 +1,13 @@
 # application.yml
-server:
-  port: 5050
-
 spring:
-  profiles:
-    active: private
-
   thymeleaf:
     cache: false
 
   data:
     redis:
-      host: localhost            # Redis 서버 호스트
-      port: 6379                 # Redis 서버 포트
-      password: ${REDIS_PASSWORD:}  # 비밀번호가 있다면 환경변수로 주입, 없으면 빈 값
+      host : ${SPRING_DATA_REDIS_HOST}
+      port : ${SPRING_DATA_REDIS_PORT}
+
       timeout: 6000ms            # 커넥션 타임아웃 (밀리초)
       lettuce:
         shutdown-timeout: 100ms  # Lettuce 클라이언트 종료 타임아웃
@@ -28,12 +22,16 @@ spring:
       client:
         registration:
           google:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET}
             provider: google
             authorization-grant-type: authorization_code
             redirect-uri: "${app.baseUrl}/login/oauth2/code/google"
             scope: openid, profile, email
 
           kakao:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET}
             provider: kakao
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
@@ -41,6 +39,8 @@ spring:
             scope: profile_image, profile_nickname, account_email
 
           naver:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_CLIENT_SECRET}
             provider: naver
             authorization-grant-type: authorization_code
             redirect-uri: "${app.baseUrl}/login/oauth2/code/naver"
@@ -66,8 +66,16 @@ spring:
             user-name-attribute: response
 
 app:
+  auth:
+    tokenSecret: ${APP_AUTH_TOKEN_SECRET}
+    accessTokenExpirationMsec: ${APP_AUTH_ACCESS_TOKEN_EXPIRATION_MSEC}
+    refreshTokenExpirationMsec: ${APP_AUTH_REFRESH_TOKEN_EXPIRATION_MSEC}
   baseUrl: http://localhost:${server.port}
 
 logging:
   level:
-    org.springframework.security: DEBUG
+    org.springframework.core.env.PropertySourcesPropertyResolver: TRACE
+
+
+server:
+  port: 5050

@@ -24,12 +24,13 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                                         HttpServletResponse res,
                                         Authentication auth) throws IOException {
         OAuth2User user = (OAuth2User) auth.getPrincipal();
-        String userId = user.getAttribute("sub"); // 구글의 경우 'sub', 카카오는 'id' 등
+        String userId = user.getAttribute("id"); // 구글의 경우 'sub', 카카오는 'id' 등
         // TODO: users 테이블에 userId, email, name 저장/업데이트
 
         String accessToken = jwtProvider.createAccessToken(userId);
         String refreshToken = jwtProvider.createRefreshToken(userId);
         // Redis에 저장
+        System.out.println("[DEBUG] storeRefreshToken 호출: userId=" + userId + ", refreshToken=" + refreshToken);
         redisService.storeRefreshToken(userId, refreshToken);
 
         // 클라이언트에 토큰 전달 (예: JSON 응답)

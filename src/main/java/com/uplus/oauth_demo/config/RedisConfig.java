@@ -1,6 +1,7 @@
 // src/main/java/com/example/demo/config/RedisConfig.java
 package com.uplus.oauth_demo.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -12,11 +13,15 @@ import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer
 
 @Configuration
 public class RedisConfig {
+    @Value("${spring.data.redis.host}")
+    private String host;
+
+    @Value("${spring.data.redis.port}")
+    private int port;
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        // localhost:6379 기본값 사용
-        return new LettuceConnectionFactory();
+        return new LettuceConnectionFactory(host, port);
     }
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory cf) {
