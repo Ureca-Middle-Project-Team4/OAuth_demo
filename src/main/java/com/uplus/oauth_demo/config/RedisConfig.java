@@ -1,4 +1,4 @@
-// src/main/java/com/example/demo/config/RedisConfig.java
+// src/main/java/com/uplus/oauth_demo/config/RedisConfig.java
 package com.uplus.oauth_demo.config;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -7,37 +7,47 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import com.uplus.oauth_demo.security.RedisAuthorizationRequestRepository;
 
+import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
-    @Value("${spring.data.redis.host}")
-    private String host;
-
-    @Value("${spring.data.redis.port}")
-    private int port;
 
     @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
+    public RedisConnectionFactory redisConnectionFactory(
+            @Value("${spring.data.redis.host}") String host,
+            @Value("${spring.data.redis.port}") int port) {
         return new LettuceConnectionFactory(host, port);
     }
+
+    // (A) OAuth2 인가 요청 저장소 전용 템플릿
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory cf) {
-        RedisTemplate<String, Object> rt = new RedisTemplate<>();
-        rt.setConnectionFactory(cf);
+    public RedisTemplate<String, OAuth2AuthorizationRequest> authRequestRedisTemplate(
+            RedisConnectionFactory cf) {
+        RedisTemplate<String, OAuth2AuthorizationRequest> tpl = new RedisTemplate<>();
+        tpl.setConnectionFactory(cf);
+        tpl.setKeySerializer(new StringRedisSerializer());
+        // JDK Serialization으로 저장/로드
+        tpl.setValueSerializer(new JdkSerializationRedisSerializer());
+        tpl.afterPropertiesSet();
+        return tpl;
+    }
 
-        // 키는 문자열로
-        rt.setKeySerializer(new StringRedisSerializer());
-        rt.setHashKeySerializer(new StringRedisSerializer());
+    @Bean
+    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository(
+            RedisTemplate<String, OAuth2AuthorizationRequest> authRequestRedisTemplate) {
+        return new RedisAuthorizationRequestRepository(authRequestRedisTemplate, Duration.ofMinutes(5));
+    }
 
-        // 값은 Java 직렬화 방식으로
-        JdkSerializationRedisSerializer jdkSerializer = new JdkSerializationRedisSerializer();
-        rt.setValueSerializer(jdkSerializer);
-        rt.setHashValueSerializer(jdkSerializer);
-
-        rt.afterPropertiesSet();
-        return rt;
+    // (B) JWT/리프레시 토큰 전용 문자열 템플릿
+    @Bean
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory cf) {
+        return new StringRedisTemplate(cf);
     }
 }

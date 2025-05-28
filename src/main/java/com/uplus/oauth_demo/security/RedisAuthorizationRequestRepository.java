@@ -1,9 +1,7 @@
-// src/main/java/com/example/demo/security/RedisAuthorizationRequestRepository.java
+// src/main/java/com/uplus/oauth_demo/security/RedisAuthorizationRequestRepository.java
 package com.uplus.oauth_demo.security;
 
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
@@ -16,11 +14,14 @@ public class RedisAuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
     private static final String PREFIX = "oauth2_auth_request:";
-    private final RedisTemplate<String, Object> redis;
-    private final Duration expire = Duration.ofMinutes(5);
+    private final RedisTemplate<String, OAuth2AuthorizationRequest> redis;
+    private final Duration expire;
 
-    public RedisAuthorizationRequestRepository(RedisTemplate<String, Object> redisTemplate) {
+    public RedisAuthorizationRequestRepository(
+            RedisTemplate<String, OAuth2AuthorizationRequest> redisTemplate,
+            Duration expire) {
         this.redis = redisTemplate;
+        this.expire = expire;
     }
 
     private String key(String state) {
@@ -31,7 +32,7 @@ public class RedisAuthorizationRequestRepository
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         String state = request.getParameter(OAuth2ParameterNames.STATE);
         if (state == null) return null;
-        return (OAuth2AuthorizationRequest) redis.opsForValue().get(key(state));
+        return redis.opsForValue().get(key(state));
     }
 
     @Override
@@ -43,26 +44,13 @@ public class RedisAuthorizationRequestRepository
                 .set(key(authRequest.getState()), authRequest, expire);
     }
 
-//    @Override
-//    public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request) {
-//        String state = request.getParameter(OAuth2ParameterNames.STATE);
-//        if (state == null) return null;
-//        String k = key(state);
-//        OAuth2AuthorizationRequest req =
-//                (OAuth2AuthorizationRequest) redis.opsForValue().get(k);
-//        redis.delete(k);
-//        return req;
-//    }
-
-    // 스프링 버전에 따라 두 번째 메소드 구현 필요
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
                                                                  HttpServletResponse response) {
         String state = request.getParameter(OAuth2ParameterNames.STATE);
         if (state == null) return null;
         String k = key(state);
-        OAuth2AuthorizationRequest req =
-                (OAuth2AuthorizationRequest) redis.opsForValue().get(k);
+        OAuth2AuthorizationRequest req = redis.opsForValue().get(k);
         redis.delete(k);
         return req;
     }
