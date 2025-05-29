@@ -53,7 +53,7 @@ jobs:
         id: create
         uses: atlassian/gajira-create@v3
         with:
-          project: SKP
+          project: TEAM-4EVER0
           issuetype: Task
           summary: '${{ github.event.issue.title }}'
           description: '${{ steps.md2jira.outputs.output-text }}'
