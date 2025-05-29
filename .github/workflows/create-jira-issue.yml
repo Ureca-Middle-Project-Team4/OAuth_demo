@@ -15,6 +15,12 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
 
+      - name: Debug env
+        run: |
+          echo "BASE_URL=[$JIRA_BASE_URL]"
+          echo "EMAIL=[$JIRA_USER_EMAIL]"
+          echo "TOKEN_LEN=${#JIRA_API_TOKEN}"
+
       - name: Checkout main code
         uses: actions/checkout@v4
         with:
