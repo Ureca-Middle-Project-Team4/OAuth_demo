@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Login
-        uses: atlassian/gajira-login@v3
+        uses: atlassian/login
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
@@ -53,7 +53,7 @@ jobs:
         id: create
         uses: atlassian/gajira-create@v3
         with:
-          project: TEAM-4EVER0
+          project: EVER
           issuetype: Task
           summary: '${{ github.event.issue.title }}'
           description: '${{ steps.md2jira.outputs.output-text }}'
